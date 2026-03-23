@@ -1,4 +1,4 @@
-# Vibecoding System
+# Vibecoding Seed
 
 One file. Drop it in. Claude does the rest.
 
@@ -55,7 +55,7 @@ Works for new projects and existing ones. Claude detects the situation and handl
 ## Sharing with someone
 
 Send them this link. The two steps above are all they need.
-`https://github.com/Crhoden428/vibecoding-system`
+`https://github.com/Crhoden428/vibecoding-seed`
 
 If they don't have VS Code + Claude Code yet, have them set that up first.
 It takes about 5 minutes and makes everything else significantly more powerful.
