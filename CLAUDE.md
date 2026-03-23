@@ -1,10 +1,18 @@
 # ============================================================
 # HOW TO USE THIS FILE
 # ============================================================
-# 1. Drop this file into your project folder
-#    (or upload it to a Claude.ai Project)
-# 2. Say: "Read CLAUDE.md and carry out the bootstrap instructions."
-# 3. That's it. Claude handles everything else.
+# NEW PROJECT:
+#   1. Drop this file into your project folder
+#      (or upload it to a Claude.ai Project)
+#   2. Say: "Read CLAUDE.md and carry out the bootstrap instructions."
+#
+# EXISTING PROJECT (already has a CLAUDE.md):
+#   1. Open your existing CLAUDE.md
+#   2. Paste the contents of this file at the TOP
+#   3. Say: "Read CLAUDE.md and carry out the bootstrap instructions."
+#      Claude will merge the working rules in without overwriting anything.
+#
+# That's it. Claude handles everything else.
 # ============================================================
 
 # [PROJECT NAME] — Claude Code Instructions
@@ -22,6 +30,21 @@ Check whether this is VS Code Claude Code or Claude.ai Projects:
 - If .claude/ directory exists or can be created → VS Code Claude Code
 - If you cannot write files to disk → Claude.ai Projects
 Proceed with the appropriate path below.
+
+STEP 2 — DETECT EXISTING PROJECT
+Before doing anything else, check if this project already has its own CLAUDE.md
+content beneath this bootstrap block (i.e. the "What This Project Is" section is
+already filled in, or there are project-specific rules present).
+
+If YES (existing project):
+- Do NOT overwrite any existing content.
+- Merge only: add the Working Rules, Git Workflow, Quality Gates, and Safety Rules
+  sections if they are missing or weaker than what is in this file.
+- Skip asking "what is this project" — the context is already there.
+- Proceed directly to hook setup (Step A2) and stack detection (Step A3).
+
+If NO (new project):
+- Proceed through all steps in order as written.
 
 ─── PATH A: VS CODE CLAUDE CODE ──────────────────────────────
 
