@@ -3,7 +3,8 @@
 # ============================================================
 # 1. Drop this file into your project folder
 #    (or upload it to a Claude.ai Project)
-# 2. Say: "Read vibecoding-setup.md and carry out the bootstrap instructions."
+# 2. Say: "Read vibecoding-seed.md and carry out the bootstrap instructions."
+#    (or just "follow this" / "do this" — VS Code Claude Code will auto-detect it)
 # 3. That's it. Claude handles everything else.
 #    Works for new and existing projects.
 # ============================================================
@@ -33,7 +34,7 @@ If CLAUDE.md EXISTS:
   from this file into the existing CLAUDE.md — only adding what is missing or weaker.
 - Keep all existing project-specific content exactly as-is.
 - Skip the "what is this project" question — the context is already there.
-- Save the updated CLAUDE.md, then delete vibecoding-setup.md.
+- Save the updated CLAUDE.md, then delete vibecoding-seed.md.
 - Proceed directly to hook setup (Step A2) and stack detection (Step A3).
 
 If CLAUDE.md DOES NOT EXIST:
@@ -61,6 +62,10 @@ File: ~/.claude/settings.json
       },
       {
         "matcher": "",
+        "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/auto-bootstrap.sh" }]
+      },
+      {
+        "matcher": "",
         "hooks": [{ "type": "command", "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\"}}'" }]
       }
     ],
@@ -78,6 +83,12 @@ File: ~/.claude/settings.json
     ]
   }
 }
+
+If ~/.claude/settings.json ALREADY EXISTS, check whether it contains "auto-bootstrap.sh"
+in the PreToolUse hooks. If not, add this entry to the PreToolUse array:
+  { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/auto-bootstrap.sh" }] }
+
+Always create these files regardless of whether settings.json existed:
 
 File: ~/.claude/statusline-command.sh
 #!/bin/bash
@@ -105,8 +116,18 @@ if echo "$COMMAND" | grep -qE "git push origin main$"; then
 fi
 exit 0
 
-After writing those files, tell the user:
-"Global setup complete. Please reload your VS Code window now:
+File: ~/.claude/hooks/auto-bootstrap.sh
+#!/bin/bash
+# Fires before every tool use. If vibecoding-seed.md is present and bootstrap
+# hasn't run yet, instructs Claude to run it before doing anything else.
+if [ -f "vibecoding-seed.md" ] && [ ! -f ".claude/.bootstrapped" ]; then
+  echo "STOP. Before doing anything else: vibecoding-seed.md is present in this project. Read it now and carry out the bootstrap instructions completely. Do not proceed with any other task until bootstrap is finished."
+fi
+
+After writing those files, run: chmod +x ~/.claude/hooks/*.sh ~/.claude/statusline-command.sh
+
+Then tell the user:
+"Global setup complete. Would you mind reloading your VS Code window?
 Ctrl+Shift+P → Developer: Reload Window
 Then come back and I'll finish the project setup."
 Wait for confirmation before continuing.
@@ -180,7 +201,7 @@ fi
 echo "✅ Quality gate passed." >&2
 exit 0
 
-Then run: chmod +x .claude/hooks/*.sh ~/.claude/hooks/*.sh ~/.claude/statusline-command.sh
+Then run: chmod +x .claude/hooks/*.sh
 
 STEP A3 — STACK DETECTION & QUALITY STUBS
 Detect the stack by checking for these files:
@@ -190,7 +211,7 @@ Detect the stack by checking for these files:
 - Cargo.toml → Rust
 - go.mod → Go
 
-Tell the user: "I detected [X stack]. I'll generate the lint/test hooks for that. Confirm?"
+Would you like me to generate the lint/test hooks for [X stack]?
 On confirmation, generate:
 - .claude/hooks/on-edit-lint.sh  (lints file at $1 on every edit)
 - .claude/hooks/run-lint.sh      (full project lint)
@@ -199,15 +220,18 @@ Use the best available linter/test runner for the stack.
 Run chmod +x on all three after creating them.
 
 STEP A4 — FILL IN THIS FILE
-Ask the user: "What is this project? Describe what it does, who it's for, and the main
-tech stack." Fill in the sections below from their answer. Also run:
+Ask the user: "Could you tell me what this project is? What it does, who it's for, and the main
+tech stack?" Fill in the sections below from their answer. Also run:
   git remote -v
 to get the GitHub repo URL and branch.
 
 STEP A5 — DONE
 Remove the entire BOOTSTRAP INSTRUCTIONS block from this file (from the opening
-<!-- to the closing --> comment). Rename this file from vibecoding-setup.md to CLAUDE.md.
-Delete the original vibecoding-setup.md. Tell the user the system is fully active.
+<!-- to the closing --> comment). Rename this file from vibecoding-seed.md to CLAUDE.md.
+Delete the original vibecoding-seed.md.
+Write an empty file at `.claude/.bootstrapped` to prevent the auto-bootstrap hook
+from triggering again.
+Tell the user the system is fully active.
 
 ─── PATH B: CLAUDE.AI PROJECTS ──────────────────────────────
 
@@ -218,8 +242,8 @@ chat in this project. To complete setup, upload your key project files (main cod
 README, docs) using the 'Add content' button. I'll have full context from now on."
 
 STEP B2 — FILL IN THIS FILE
-Ask the user: "What is this project? Describe what it does, who it's for, and the
-main tech stack." Fill in the sections below from their answer.
+Ask the user: "Could you tell me what this project is? What it does, who it's for, and the
+main tech stack?" Fill in the sections below from their answer.
 
 STEP B3 — DONE
 Delete the entire BOOTSTRAP INSTRUCTIONS block from this file.

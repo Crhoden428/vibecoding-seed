@@ -24,14 +24,15 @@ Install Claude Code: open VS Code → Extensions → search "Claude Code"
 ## How to use it
 
 **VS Code Claude Code (recommended):**
-1. Download `vibecoding-setup.md` from this repo
+1. Download `vibecoding-seed.md` from this repo
 2. Drop it into your project folder
-3. Say: **"Read vibecoding-setup.md and carry out the bootstrap instructions."**
+3. Say: **"Read vibecoding-seed.md and carry out the bootstrap instructions."**
+   (or just "follow this" / "do this" — VS Code Claude Code will auto-detect it)
 
 **Claude.ai Projects (web, limited):**
-1. Download `vibecoding-setup.md` from this repo
+1. Download `vibecoding-seed.md` from this repo
 2. Upload it to your Claude Project (Add content → upload file)
-3. Say: **"Read vibecoding-setup.md and carry out the bootstrap instructions."**
+3. Say: **"Read vibecoding-seed.md and carry out the bootstrap instructions."**
 
 Note: the web version sets up working rules and project memory only.
 Hooks, quality gates, and auto-approve require VS Code Claude Code.
