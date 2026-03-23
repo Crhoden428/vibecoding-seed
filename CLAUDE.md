@@ -1,27 +1,219 @@
-# [PROJECT NAME] — Claude Code Instructions
-# Loaded automatically at the start of every session.
-# Claude fills in project specifics through conversation — no manual editing needed.
+# ============================================================
+# HOW TO USE THIS FILE
+# ============================================================
+# 1. Drop this file into your project folder
+#    (or upload it to a Claude.ai Project)
+# 2. Say: "Read CLAUDE.md and carry out the bootstrap instructions."
+# 3. That's it. Claude handles everything else.
+# ============================================================
 
-## What This Project Is
-<!-- Claude: if this section is empty, ask the user to describe the project before doing
-anything else. Capture: what it does, who it's for, the tech stack, target platforms,
-and any key third-party services. Fill this in from their answer. -->
+# [PROJECT NAME] — Claude Code Instructions
+
+<!-- ============================================================
+BOOTSTRAP INSTRUCTIONS (Claude executes this on first run)
+Remove this entire block after bootstrap is complete.
+============================================================
+
+You are setting up the Vibecoding System for this project.
+Work through the following steps in order. Do not skip any.
+
+STEP 1 — DETECT ENVIRONMENT
+Check whether this is VS Code Claude Code or Claude.ai Projects:
+- If .claude/ directory exists or can be created → VS Code Claude Code
+- If you cannot write files to disk → Claude.ai Projects
+Proceed with the appropriate path below.
+
+─── PATH A: VS CODE CLAUDE CODE ──────────────────────────────
+
+STEP A1 — GLOBAL SETUP (one-time per machine)
+Check if ~/.claude/settings.json exists and contains "effortLevel".
+If it does NOT, create it now using the Write tool:
+
+File: ~/.claude/settings.json
+{
+  "effortLevel": "high",
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-dangerous.sh" }]
+      },
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\"}}'" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "bash .claude/hooks/analyze-on-edit.sh" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "bash .claude/hooks/quality-gate.sh" }]
+      }
+    ]
+  }
+}
+
+File: ~/.claude/statusline-command.sh
+#!/bin/bash
+PROJECT=$(basename "$PWD")
+BRANCH=$(git branch --show-current 2>/dev/null)
+if [ -n "$BRANCH" ]; then
+  echo "◆ $PROJECT  ⎇ $BRANCH"
+else
+  echo "◆ $PROJECT"
+fi
+
+File: ~/.claude/hooks/block-dangerous.sh
+#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | grep -oP '"command"\s*:\s*"\K[^"]+(?=")' | head -1)
+if echo "$COMMAND" | grep -qE "git push.*(--force|-f\b)"; then
+  echo "Blocked: force push is never allowed." >&2
+  echo "BLOCKED: Force push is never allowed. Stop and explain why this is needed."
+  exit 2
+fi
+if echo "$COMMAND" | grep -qE "git push origin main$"; then
+  echo "Blocked: direct push to main." >&2
+  echo "BLOCKED: Direct push to main is not allowed. Use a feature branch and open a PR."
+  exit 2
+fi
+exit 0
+
+After writing those files, tell the user:
+"Global setup complete. Please reload your VS Code window now:
+Ctrl+Shift+P → Developer: Reload Window
+Then come back and I'll finish the project setup."
+Wait for confirmation before continuing.
+
+STEP A2 — PROJECT HOOK SETUP
+Create the following files in the project:
+
+File: .claude/settings.json
+{
+  "permissions": {
+    "allow": ["Bash(git:*)", "Bash(ls:*)", "Bash(bash:*)", "WebSearch(*)", "WebFetch(*)", "Bash(chmod:*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": "bash .claude/hooks/analyze-on-edit.sh", "timeout": 60 }] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "bash .claude/hooks/block-dangerous.sh", "timeout": 10 }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "bash .claude/hooks/quality-gate.sh", "timeout": 180 }] }
+    ]
+  }
+}
+
+File: .claude/hooks/analyze-on-edit.sh
+#!/bin/bash
+INPUT=$(cat)
+FILE=$(echo "$INPUT" | grep -oP '"path"\s*:\s*"\K[^"]+(?=")' | head -1)
+LINT_HOOK=".claude/hooks/on-edit-lint.sh"
+if [ ! -f "$LINT_HOOK" ]; then
+  echo "⚠️  Stack hooks not set up yet. Tell Claude: 'generate the stack quality hooks'" >&2
+  exit 0
+fi
+bash "$LINT_HOOK" "$FILE"
+exit $?
+
+File: .claude/hooks/block-dangerous.sh
+#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | grep -oP '"command"\s*:\s*"\K[^"]+(?=")' | head -1)
+if echo "$COMMAND" | grep -qE "git push.*(--force|-f\b)"; then
+  echo "BLOCKED: Force push is never allowed." && exit 2
+fi
+if echo "$COMMAND" | grep -qE "git push origin main$"; then
+  echo "BLOCKED: Direct push to main is not allowed. Use a feature branch and open a PR." && exit 2
+fi
+exit 0
+
+File: .claude/hooks/quality-gate.sh
+#!/bin/bash
+LINT_HOOK=".claude/hooks/run-lint.sh"
+TEST_HOOK=".claude/hooks/run-tests.sh"
+if [ ! -f "$LINT_HOOK" ] || [ ! -f "$TEST_HOOK" ]; then
+  echo "⚠️  Stack hooks not configured — quality gate skipped." >&2
+  exit 0
+fi
+echo "=== Quality Gate ===" >&2
+LINT_OUTPUT=$(bash "$LINT_HOOK" 2>&1); LINT_EXIT=$?
+echo "$LINT_OUTPUT" >&2
+if [ $LINT_EXIT -ne 0 ]; then
+  echo "QUALITY GATE FAILED: Lint errors found. Fix all errors before declaring done."
+  exit 2
+fi
+TEST_OUTPUT=$(bash "$TEST_HOOK" 2>&1); TEST_EXIT=$?
+echo "$TEST_OUTPUT" >&2
+if [ $TEST_EXIT -ne 0 ]; then
+  echo "QUALITY GATE FAILED: Tests failed. Fix all failures before declaring done."
+  exit 2
+fi
+echo "✅ Quality gate passed." >&2
+exit 0
+
+Then run: chmod +x .claude/hooks/*.sh ~/.claude/hooks/*.sh ~/.claude/statusline-command.sh
+
+STEP A3 — STACK DETECTION & QUALITY STUBS
+Detect the stack by checking for these files:
+- pubspec.yaml → Flutter/Dart
+- package.json → Node/JS/TS
+- requirements.txt or pyproject.toml → Python
+- Cargo.toml → Rust
+- go.mod → Go
+
+Tell the user: "I detected [X stack]. I'll generate the lint/test hooks for that. Confirm?"
+On confirmation, generate:
+- .claude/hooks/on-edit-lint.sh  (lints file at $1 on every edit)
+- .claude/hooks/run-lint.sh      (full project lint)
+- .claude/hooks/run-tests.sh     (full test suite)
+Use the best available linter/test runner for the stack.
+Run chmod +x on all three after creating them.
+
+STEP A4 — FILL IN THIS FILE
+Ask the user: "What is this project? Describe what it does, who it's for, and the main
+tech stack." Fill in the sections below from their answer. Also run:
+  git remote -v
+to get the GitHub repo URL and branch.
+
+STEP A5 — DONE
+Delete the entire BOOTSTRAP INSTRUCTIONS block from this file (from the opening
+<!-- to the closing --> comment). Save the file. Tell the user the system is fully active.
+
+─── PATH B: CLAUDE.AI PROJECTS ──────────────────────────────
+
+STEP B1 — CONFIRM SETUP
+Tell the user:
+"You're using Claude.ai Projects. The working rules below are now active for every
+chat in this project. To complete setup, upload your key project files (main code,
+README, docs) using the 'Add content' button. I'll have full context from now on."
+
+STEP B2 — FILL IN THIS FILE
+Ask the user: "What is this project? Describe what it does, who it's for, and the
+main tech stack." Fill in the sections below from their answer.
+
+STEP B3 — DONE
+Delete the entire BOOTSTRAP INSTRUCTIONS block from this file.
+Note: hooks and quality gates are not available in Claude.ai Projects — those require
+VS Code Claude Code.
+
+============================================================ -->
 
 ---
 
-## Stack & Hooks Setup
-<!-- Claude: at the start of any NEW project (no .claude/hooks/on-edit-lint.sh exists):
-1. Detect the stack: check for pubspec.yaml (Flutter), package.json (Node/JS),
-   requirements.txt or pyproject.toml (Python), Cargo.toml (Rust), go.mod (Go), etc.
-2. Tell the user: "I detected [X stack]. I'll configure the quality hooks for that.
-   Confirm?" Wait for approval before generating anything.
-3. On approval, generate these 3 files in .claude/hooks/:
-   - on-edit-lint.sh  (lints the file just edited, receives filepath as $1)
-   - run-lint.sh      (full project lint, called by quality gate)
-   - run-tests.sh     (full test suite, called by quality gate)
-   Use the best available tool for the detected stack. See stack-examples/ in the
-   vibecoding-system repo for reference implementations.
-4. Also fill in the Build & Run Commands section below. -->
+## What This Project Is
+<!-- Filled in during bootstrap -->
 
 ---
 
@@ -73,24 +265,20 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 Types: `feat` `fix` `chore` `refactor` `docs` `test` `deploy`
 
 ### Never
-- Force push (`--force` / `-f`) to any branch — ever.
+- Force push to any branch — ever.
 - Commit directly to `main` or `develop`.
 - Leave uncommitted changes at end of session — commit or stash.
-- Use `git add .` — stage specific files to avoid committing secrets or binaries.
+- Use `git add .` — stage specific files to avoid committing secrets.
 
 ---
 
 ## Quality Gates (Run Before Declaring Done)
-<!-- Claude: fill these in after stack detection -->
-```bash
-# Lint:  [filled in by Claude after stack detection]
-# Test:  [filled in by Claude after stack detection]
-```
+<!-- Filled in during bootstrap -->
 
 ---
 
 ## Safety Rules
-- Never deploy to production unless explicitly requested. Default to staging/testing.
+- Never deploy to production unless explicitly requested.
 - Never edit existing migration files — always create new ones.
 - Stage specific files only — never `git add .` or `git add -A`.
 - If unsure whether an action is destructive, ask before proceeding.
@@ -98,38 +286,26 @@ Types: `feat` `fix` `chore` `refactor` `docs` `test` `deploy`
 ---
 
 ## Build & Run Commands
-<!-- Claude: fill in after stack detection -->
-```bash
-# Install:  [filled in by Claude]
-# Lint:     [filled in by Claude]
-# Test:     [filled in by Claude]
-# Build:    [filled in by Claude]
-# Run:      [filled in by Claude]
-```
+<!-- Filled in during bootstrap -->
 
 ---
 
 ## Architecture Rules
-<!-- Claude: ask the user for any non-obvious architectural rules specific to this project.
-Examples: state management approach, where new data fields go, async patterns, etc.
-Fill in from their answers. Leave blank if none provided. -->
+<!-- Filled in during bootstrap -->
 
 ---
 
 ## Technical Constants
-<!-- Claude: fill in as you discover key values — API endpoints, magic numbers,
-active services, DB identifiers, etc. These help future sessions avoid bugs. -->
+<!-- Filled in as discovered -->
 
 ---
 
 ## Key File Paths
-<!-- Claude: fill in as the codebase becomes clear. -->
 | Component | Path |
 |-----------|------|
 
 ---
 
 ## GitHub Repo
-<!-- Claude: fill in from git remote -v -->
 Remote: ``
 Branch: ``

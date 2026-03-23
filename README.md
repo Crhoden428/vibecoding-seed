@@ -1,112 +1,50 @@
-# Vibecoding System — Claude Code Setup
+# Vibecoding System
 
-A portable, stack-agnostic system for collaborating with Claude Code. Clone this repo, copy a few files, and every project you touch will have enforced quality gates, parallel agents, and a safe git workflow — automatically, with no approval popups.
-
----
-
-## What's In Here
-
-```
-vibecoding-system/
-├── CLAUDE.md                  ← the template — copy into any project as CLAUDE.md
-├── global-setup/
-│   ├── settings.json          ← copy to ~/.claude/ once per machine
-│   └── statusline-command.sh  ← copy to ~/.claude/ once per machine
-└── hooks/
-    ├── analyze-on-edit.sh     ← fires on every file edit
-    ├── block-dangerous.sh     ← blocks force push + prod ops
-    ├── quality-gate.sh        ← runs before Claude says "done"
-    ├── settings-template.json ← project-level .claude/settings.json
-    └── stack-examples/        ← Claude generates these — examples here
-        ├── flutter/
-        ├── node/
-        └── python/
-```
+One file. Drop it in. Claude does the rest.
 
 ---
 
-## One-Time Machine Setup
+## How to use it
 
-Do this once. It applies to every project.
+**VS Code Claude Code:**
+1. Download `CLAUDE.md` from this repo
+2. Drop it into your project folder
+3. Open Claude Code and say: **"Read CLAUDE.md and carry out the bootstrap instructions."**
 
-```bash
-git clone https://github.com/Crhoden428/vibecoding-system.git
-cd vibecoding-system
+**Claude.ai Projects:**
+1. Download `CLAUDE.md` from this repo
+2. Upload it to your Claude Project (Add content → upload file)
+3. Say: **"Read CLAUDE.md and carry out the bootstrap instructions."**
 
-cp global-setup/settings.json ~/.claude/settings.json
-cp global-setup/statusline-command.sh ~/.claude/statusline-command.sh
-mkdir -p ~/.claude/hooks
-cp hooks/block-dangerous.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/block-dangerous.sh ~/.claude/statusline-command.sh
-```
-
-Then in VS Code: `Ctrl+Shift+P` → `Developer: Reload Window`
-
-The status bar activates. Claude auto-approves all actions. Dangerous git ops are blocked globally.
+That's it. Claude sets up everything — global config, hooks, quality gates, git rules —
+and fills in your project details through conversation. No manual file editing. No
+fishing around your file system.
 
 ---
 
-## New Project Setup
+## What gets set up
 
-```bash
-# From your project root:
-cp /path/to/vibecoding-system/CLAUDE.md CLAUDE.md
-mkdir -p .claude/hooks .claude/rules
-cp /path/to/vibecoding-system/hooks/analyze-on-edit.sh .claude/hooks/
-cp /path/to/vibecoding-system/hooks/block-dangerous.sh .claude/hooks/
-cp /path/to/vibecoding-system/hooks/quality-gate.sh .claude/hooks/
-cp /path/to/vibecoding-system/hooks/settings-template.json .claude/settings.json
-chmod +x .claude/hooks/*.sh
-```
-
-Open Claude Code and say:
-> "Read CLAUDE.md and help me fill it in for this project, then generate the stack quality hooks."
-
-Claude detects your stack, fills in the project-specific sections through conversation, generates the lint/test stubs, and asks you to confirm. Done.
+- Auto-approve — Claude works without asking permission for every action
+- Live status bar in VS Code showing branch and current task
+- Lint on every file edit — bad code caught immediately
+- Quality gate before done — tests must pass before Claude declares victory
+- Force push blocked — destructive git ops stopped automatically
+- Multiagent by default — parallel research, coding, and testing
+- Persistent project memory — context loaded every session automatically
 
 ---
 
-## Existing Project (Already Has a CLAUDE.md)
+## What's in the box
 
-Don't overwrite it. Instead, tell Claude:
+Just one file: `CLAUDE.md`
 
-> "Merge the working rules from [vibecoding-system]/CLAUDE.md into my existing CLAUDE.md. Keep all project-specific content. Add the multiagent, git workflow, and quality gate sections if they're missing or weaker."
-
-Claude reads both files and merges them. Your project context stays intact; the working rules get added or upgraded.
-
-Then copy the hooks as above.
+It contains everything — the bootstrap instructions Claude follows on first run,
+and the working rules that apply to every session after. The GitHub repo and this
+README exist only so you have a permanent place to get the file and share it.
 
 ---
 
-## How Stack Detection Works
+## Sharing with someone
 
-The three universal hooks delegate to small stub files Claude generates for your stack:
-
-| Stub | What it does |
-|------|-------------|
-| `.claude/hooks/on-edit-lint.sh` | Lints the file just edited (receives filepath as `$1`) |
-| `.claude/hooks/run-lint.sh` | Full project lint (called at quality gate) |
-| `.claude/hooks/run-tests.sh` | Full test suite (called at quality gate) |
-
-Claude generates these after detecting your stack. See `hooks/stack-examples/` for reference.
-
----
-
-## What You Get
-
-- **No approval popups** — Claude edits, runs bash, and tests without asking
-- **Live VS Code status bar** — see what Claude is doing in real-time
-- **Lint on every edit** — bad code caught immediately, not at session end
-- **Quality gate before done** — Claude can't declare victory with failing tests or lint errors
-- **Force push blocked** — destructive git ops stopped before they run
-- **Parallel agents** — research, coding, and testing run simultaneously by default
-- **Conventional commits** — every change is self-documenting
-
----
-
-## First Message (Every New Session)
-
-```
-New session. Confirm you've read CLAUDE.md and the rules in .claude/rules/.
-Tell me what branch I'm on and what the quality gates are. Then: [your goal].
-```
+Send them this link. Tell them to follow the two steps above.
+`https://github.com/Crhoden428/vibecoding-system`
